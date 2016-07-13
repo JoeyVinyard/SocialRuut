@@ -10,36 +10,35 @@ app.get('/', function(req, res){
 var clients = [];
 io.on('connection', function(client){
 	console.log("connect");
-	//console.log(clients.length);
 	client.emit('userCreated', clients.length);
 	console.log('CREATING USER WITH ID ' + (clients.length + 1));
 	clients.push(client.id);
 	for(items in clients){
 		if(clients[items] != client.id){
-			//console.log("TRANSMITTING USER ADDED TO USER ID " + (Number(items) + 1))
 			io.sockets.connected[clients[Number(items)]].emit('userAdded', clients.length);
 		}
 	}
 	client.on('mouseMove', function(mousePos){
-		//console.log("RECEIVING MOUSE MOVE FROM USER ID " + (clients.indexOf(client.id) + 1))
 		for(items in clients){
 			if(clients[items] != client.id){
 				var idMouse = mousePos;
 				newID = Number((clients.indexOf(client.id) + 1));
-				//console.log(newID);
 				idMouse.push(newID)
 				io.sockets.connected[clients[items]].emit('mouseMoved', idMouse);
 			}
 		}
 	});
-	// io.on('mouseMove', function(mousePos){
-	// 	for(items in clients){
-	// 		console.log(clients[items], socket.id, console.log(clients.indexOf(socket.id)));
-	// 		if(clients[items] != socket.id){
-	// 			clients[items].emit('repositionBox');
-	// 		}
-	// 	}
-	// });
+	client.on('disconnect', function(){
+		console.log("user left");
+		var id = client.id;
+		var indexOfLeave = clients.indexOf(id);
+		clients.splice(indexOfLeave, 1)
+		for(items in clients){
+			if(clients[items] != client.id){
+				io.sockets.connected[clients[items]].emit('clientLeft', indexOfLeave);
+			}
+		}
+	})
 });
 
 http.listen(3001, function(){

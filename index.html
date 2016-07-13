@@ -75,6 +75,20 @@
         $(cssID).css("top", mousePosition[0]);
         $(cssID).css("left", mousePosition[1]);
       });
+
+      inOut.on('clientLeft', function(id){
+        var delID = "#" + (Number(id) + 1);
+        console.log("REMOVING USER " + delID);
+        $(delID).remove();
+        squareClients.splice(id, 1);
+        console.log(squareClients.length, id);
+        // for(var i = id; i <= squareClients.length; i++){
+        //   squareClients[i].id--;
+        //   cssID = "#" + (Number(i) + 1);
+        //   console.log("CHANGING USER " + cssID + " to " + i);
+        //   $(cssID).attr('id', i);
+        // }
+      });
     </script>
   </body>
 </html>
