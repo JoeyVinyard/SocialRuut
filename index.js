@@ -5,6 +5,7 @@ var io = require('socket.io')(http);
 
 app.get('/', function(req, res){
   res.sendFile(__dirname + '/index.html');
+
 });
 
 var clients = [];

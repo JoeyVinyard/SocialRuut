@@ -1,5 +1,8 @@
-.box{
-	width:30px;
-	height:30px;
-	position:absolute;
+body{
+	background-color: blue;
+}
+#test{
+	width:100px;
+	height:100px;
+	color: black;
 }

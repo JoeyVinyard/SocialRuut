@@ -3,8 +3,10 @@
 <html>
   <head>
     <title>Social Squares</title>
+    <link rel="stylesheet" type="text/css" href="css/styles.css" />
   </head>
   <body>
+    <div id = "test"></div>
     <style>
       .socSquare{
         width:30px;
@@ -82,12 +84,6 @@
         $(delID).remove();
         squareClients.splice(id, 1);
         console.log(squareClients.length, id);
-        // for(var i = id; i <= squareClients.length; i++){
-        //   squareClients[i].id--;
-        //   cssID = "#" + (Number(i) + 1);
-        //   console.log("CHANGING USER " + cssID + " to " + i);
-        //   $(cssID).attr('id', i);
-        // }
       });
     </script>
   </body>
