@@ -18,8 +18,8 @@
     <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
     <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
     <script>
-      var squareClients = [];
-      var inOut = io();
+      var squareClients = []; //Array to hold all the clients
+      var server = io(); //Server io
 
       var socialSquare = {
         id    : 0
@@ -28,62 +28,69 @@
       var localSquareID = "#";
 
       function getRandomColor(){
+        //Generates a random 6 digit number to be used as a color
         var num = Math.floor(Math.random() * (999999-111111)) + 111111;
         return "#" + num;
       }
       function createSocialSquare(id){
+        //Creates a new element for the client
         var appendString = "<div id = " + id + " class = socSquare></div>";
         $("body").append(appendString)
         $("#" + id).css("left", id*50);
+        //Generates a random color for the square
         var color = getRandomColor();
-        console.log(id);
         $("#" + id).css("background-color", color);
+        //Create the social square object to store
         newSquare = Object.create(socialSquare);
         newSquare.id = id;
-        //Push it into the array
+        //Push the newly created square into the array
         squareClients.push(newSquare);
       }
 
-      inOut.on('userAdded', function(elems){
+      //Creates a new square whenever a user joins
+      server.on('userAdded', function(elems){
           createSocialSquare(Number(elems));
       });
 
-      inOut.on('userCreated', function(elems){
-        console.log(elems);
+      server.on('userCreated', function(elems){
         //create the socialSquare
         createSocialSquare(elems + 1);
         localSquareID += (Number(elems) + 1);
+        //Create any squares that are already on the server
         for(var i = 1; i <= elems; i++){
-          console.log("creating", i);
           createSocialSquare(Number(i));
         }
       });
 
-      inOut.on('userDisconnected', function(){
-        squareClients.pop();
-      });
-
       var mousePos = [];
       $(document).mousemove(function(event){
-        $(localSquareID).css("top", event.pageY-15);
-        $(localSquareID).css("left", event.pageX-15);
+        //Stores new mouse position in an array
         mousePos[0] = event.pageY-15;
         mousePos[1] = event.pageX-15;
-        inOut.emit('mouseMove', mousePos);
+        //Move the locally stored client based on mouse movement
+        $(localSquareID).css("top", mousePos[0]);
+        $(localSquareID).css("left", mousePos[1]);
+        //Send the server the mouse position
+        server.emit('mouseMove', mousePos);
       });
 
-      inOut.on('mouseMoved', function(mousePosition){
-        var cssID = "#" + Number(mousePosition[2]);
-        $(cssID).css("top", mousePosition[0]);
-        $(cssID).css("left", mousePosition[1]);
+      //Listens to the server, waiting for a client to move its mouse
+      server.on('clientMoved', function(clientInfo){
+        //Generates the element ID to manipulate
+        var cssID = "#" + Number(clientInfo[2]);
+        //Moves the other squares, based on passed information
+        $(cssID).css("top", clientInfo[0]);
+        $(cssID).css("left", clientInfo[1]);
       });
 
-      inOut.on('clientLeft', function(id){
+      //Listens to the server, waiting for a client to leave
+      server.on('clientLeft', function(id){
+        //Generates the element ID to delete, then deletes it
         var delID = "#" + (Number(id) + 1);
-        console.log("REMOVING USER " + delID);
         $(delID).remove();
+
+        //Remove square from array, and shift elements overs
         squareClients.splice(id, 1);
-        console.log(squareClients.length, id);
       });
     </script>
   </body>

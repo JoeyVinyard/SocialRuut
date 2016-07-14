@@ -25,7 +25,7 @@ io.on('connection', function(client){
 				var idMouse = mousePos;
 				newID = Number((clients.indexOf(client.id) + 1));
 				idMouse.push(newID)
-				io.sockets.connected[clients[items]].emit('mouseMoved', idMouse);
+				io.sockets.connected[clients[items]].emit('clientMoved', idMouse);
 			}
 		}
 	});
