@@ -21,7 +21,7 @@
       var squareClients = []; //Array to hold all the clients
       var server = io(); //Server io
 
-      var socialSquare = {
+      var socialSquare = {//Base object for the squares
         id    : 0
       }
 
@@ -53,13 +53,14 @@
       });
 
       server.on('userCreated', function(elems){
-        //create the socialSquare
-        createSocialSquare(elems + 1);
-        localSquareID += (Number(elems) + 1);
+
         //Create any squares that are already on the server
         for(var i = 1; i <= elems; i++){
           createSocialSquare(Number(i));
         }
+        //create the players socialSquare
+        createSocialSquare(elems + 1);
+        localSquareID += (Number(elems) + 1);
       });
 
       var mousePos = [];
@@ -91,7 +92,11 @@
 
         //Remove square from array, and shift elements overs
         squareClients.splice(id, 1);
+        for(var i = id; i < squareClients.length; i++){
+          squareClients[i].id -= 1;
+        }
+        //console.log(squareClients);
       });
     </script>
   </body>
-</html>
+</html>            
