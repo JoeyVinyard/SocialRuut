@@ -33,6 +33,7 @@ io.on('connection', function(client){
 				var idMouse = mousePos;
 				newID = Number((clients.indexOf(client.id) + 1));
 				idMouse.push(newID)
+				//console.log("USER ID " + newID + " IS MOVING");
 				io.sockets.connected[clients[items]].emit('clientMoved', idMouse);
 			}
 		}
@@ -44,6 +45,7 @@ io.on('connection', function(client){
 		var indexOfLeave = clients.indexOf(id);
 		//Removes the disconnected client from the list
 		clients.splice(indexOfLeave, 1)
+		console.log('USER IN INDEX', indexOfLeave, "HAS LEFT");
 		for(items in clients){
 			if(clients[items] != client.id){
 				//Tells each of the remaining clients that somebody left
