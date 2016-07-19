@@ -17,6 +17,7 @@
     </style>
     <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
     <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+    <script src = "https://cdnjs.cloudflare.com/ajax/libs/gsap/1.18.0/TweenMax.min.js"></script>
     <script>
       var squareClients = []; //Array to hold all the clients
       var server = io(); //Server io
@@ -72,8 +73,10 @@
         mousePos[0] = event.pageY-15;
         mousePos[1] = event.pageX-15;
         //Move the locally stored client based on mouse movement
-        $(localSquareID).css("top", mousePos[0]);
-        $(localSquareID).css("left", mousePos[1]);
+        TweenMax.to( $(localSquareID), 2, {
+          css: { left: mousePos[1], top: mousePos[0] },
+          ease: Linear.easeOut
+        });
         //Send the server the mouse position
         server.emit('mouseMove', mousePos);
       });
@@ -83,8 +86,10 @@
         //Generates the element ID to manipulate
         var cssID = "#" + Number(clientInfo[2]);
         //Moves the other squares, based on passed information
-        $(cssID).css("top", clientInfo[0]);
-        $(cssID).css("left", clientInfo[1]);
+        TweenMax.to( $(cssID), 2, {
+          css: { left: clientInfo[1], top: clientInfo[0] },
+          ease: Linear.easeOut
+        });
       });
 
       //Listens to the server, waiting for a client to leave
@@ -109,4 +114,4 @@
       });
     </script>
   </body>
-</html>            
+</html>
