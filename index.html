@@ -3,7 +3,6 @@
 <html>
   <head>
     <title>Social Squares</title>
-    <link rel="stylesheet" type="text/css" href="css/styles.css" />
   </head>
   <body>
     <div id = "test"></div>
@@ -12,7 +11,6 @@
         width:30px;
         height:30px;
         position:absolute;
-        background-color: red;
       }
     </style>
     <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
@@ -23,11 +21,17 @@
       var server = io(); //Server io
 
       var socialSquare = {//Base object for the squares
-        id    : 0
+        id        : 0,
+        mouseXPos : 0,
+        mouseYPos : 0
       }
 
       var localSquareID = "#";
       var localSquareNum = 0;
+
+      var relativePos = [0,0];
+
+      var heightOffset, widthOffset, yOffset, xOffset;
 
       function getRandomColor(){
         //Generates a random 6 digit number to be used as a color
@@ -46,9 +50,23 @@
         //Create the social square object to store
         newSquare = Object.create(socialSquare);
         newSquare.id = id;
+        newSquare.mouseXPos = id*50;
         //Push the newly created square into the array
         squareClients.push(newSquare);
       }
+
+      function rePositionSquare(){
+        heightOffset = parseInt($(localSquareID).css("height"), 10)/2;
+        widthOffset = parseInt($(localSquareID).css("width"), 10)/2;
+        relativePos[0] = Math.floor(window.innerHeight/2 - heightOffset);
+        relativePos[1] = Math.floor(window.innerWidth/2 - widthOffset);
+        $(localSquareID).css("top", relativePos[0]);
+        $(localSquareID).css("left", relativePos[1]);
+      }
+
+      $(window).resize(function(){
+        rePositionSquare();
+      })
 
       //Creates a new square whenever a user joins
       server.on('userAdded', function(elems){
@@ -65,31 +83,37 @@
         localSquareNum = Number(elems) + 1;
         createSocialSquare(localSquareNum);
         localSquareID += (localSquareNum);
+        
+        rePositionSquare();
       });
 
       var mousePos = [];
       $(document).mousemove(function(event){
         //Stores new mouse position in an array
+        yOffset = event.pageY - 15 - parseInt($(localSquareID).css("top"), 10);
+        xOffset = event.pageX - 15 - parseInt($(localSquareID).css("left"), 10);
         mousePos[0] = event.pageY-15;
         mousePos[1] = event.pageX-15;
         //Move the locally stored client based on mouse movement
-        TweenMax.to( $(localSquareID), 2, {
-          css: { left: mousePos[1], top: mousePos[0] },
-          ease: Linear.easeOut
-        });
+        // TweenMax.to( $(localSquareID), 2, {
+        //   css: { left: mousePos[1], top: mousePos[0] },
+        //   ease: Linear.easeOut
+        // });
         //Send the server the mouse position
         server.emit('mouseMove', mousePos);
       });
 
       //Listens to the server, waiting for a client to move its mouse
       server.on('clientMoved', function(clientInfo){
+        squareClients[(clientInfo[2]-1)].mouseYPos = clientInfo[0];
+        squareClients[(clientInfo[2]-1)].mouseXPos = clientInfo[1];
         //Generates the element ID to manipulate
-        var cssID = "#" + Number(clientInfo[2]);
+        //var cssID = "#" + Number(clientInfo[2]);
         //Moves the other squares, based on passed information
-        TweenMax.to( $(cssID), 2, {
-          css: { left: clientInfo[1], top: clientInfo[0] },
-          ease: Linear.easeOut
-        });
+        // TweenMax.to( $(cssID), 2, {
+        //   css: { left: clientInfo[1], top: clientInfo[0] },
+        //   ease: Linear.easeOut
+        // });
       });
 
       //Listens to the server, waiting for a client to leave
@@ -106,12 +130,23 @@
         //Remove square from array, and shift elements overs
         squareClients.splice(id, 1);
         for(var i = id; i < squareClients.length; i++){
-          $("#"+squareClients[i].id).attr("id", Number(i+1));
+          $("#"+squareClients[i].id).attr ("id", Number(i+1));
           squareClients[i].id -= 1;
         }
-
-        //console.log(squareClients);
       });
+      var cssIDRel;
+      var curPos = [0,0];
+      window.setInterval(function(){
+        for(var i = 1; i <= squareClients.length; i++){
+          if(i != localSquareNum){
+            cssIDRel = "#" + Number(i);
+            curPos[0] = parseInt($(cssIDRel).css("top"), 10);
+            curPos[1] = parseInt($(cssIDRel).css("left"), 10);
+            $(cssIDRel).css("top", curPos[0] + (yOffset/-100));
+            $(cssIDRel).css("left", curPos[1]  + (xOffset/-100));
+          }
+        }
+      }, 10)
     </script>
   </body>
 </html>

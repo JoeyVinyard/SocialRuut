@@ -1,7 +1,7 @@
 {
-  "name": "socket-chat-example",
-  "version": "0.0.1",
-  "description": "My first socket.io app",
+  "name": "socialsquares",
+  "version": "0.1",
+  "description": "Social Squares Game",
   "main": "index.js",
   "dependencies": {
     "express": "^4.10.2",
