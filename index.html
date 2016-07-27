@@ -64,10 +64,10 @@
       function rePositionSquare(){
         heightOffset = parseInt($(localSquareID).css("height"), 10)/2;
         widthOffset = parseInt($(localSquareID).css("width"), 10)/2;
-        pos[0] = Math.floor(window.innerHeight/2 - heightOffset);
-        pos[1] = Math.floor(window.innerWidth/2 - widthOffset);
-        $(localSquareID).css("top", pos[0]);
-        $(localSquareID).css("left", pos[1]);
+        relativePos[0] = Math.floor(window.innerHeight/2 - heightOffset);
+        relativePos[1] = Math.floor(window.innerWidth/2 - widthOffset);
+        $(localSquareID).css("top", relativePos[0]);
+        $(localSquareID).css("left", relativePos[1]);
       }
 
       $(window).resize(function(){
@@ -141,8 +141,13 @@
             curPos[0] = parseInt($(cssIDRel).css("top"), 10);
             curPos[1] = parseInt($(cssIDRel).css("left"), 10);
            // console.log(squareClients[i].yOff + " " + squareClients[i].xOff);
-            $(cssIDRel).css("top", curPos[0] - squareClients[i].yOff + (yOffset/-100));
-            $(cssIDRel).css("left", curPos[1]  - squareClients[i].xOff + (xOffset/-100));
+            squareClients[i].yPos = parseInt($(cssIDRel).css("top"), 10) - squareClients[i].yOff;
+            squareClients[i].xPos = parseInt($(cssIDRel).css("left"), 10) - squareClients[i].xOff;
+            relativePos[0] += yOffset;
+            relativePos[1] += xOffset;
+            console.log(squareClients[i].yPos + " " + yOffset/-100 + " " + squareClients[i].xOff + " " + squareClients[i].xPos + " " + xOffset/-100);
+            $(cssIDRel).css("top",  squareClients[i].yPos + (yOffset/-100));
+            $(cssIDRel).css("left", squareClients[i].xPos + (xOffset/-100));
           }
         }
       }
