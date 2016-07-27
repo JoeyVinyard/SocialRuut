@@ -13,6 +13,7 @@ var clients = [];//Initialize a new array to hold all the clients
 
 //Fire whenever a new client connects
 io.on('connection', function(client){
+	
 	//Transmit to the new client that it was created
 	client.emit('userCreated', clients.length);
 	//Add the new client to the end of the client list
@@ -23,7 +24,9 @@ io.on('connection', function(client){
 			io.sockets.connected[clients[Number(items)]].emit('userAdded', clients.length);
 		}
 	}
-
+	client.on('clientInfo', function(pos){
+		io.emit('clientInfo', pos);
+	});
 	//Fires when the client moves its mouse
 	client.on('mouseMove', function(mousePos){
 		//Loop through the clients and transmit to all of them that a client has moved
@@ -33,7 +36,7 @@ io.on('connection', function(client){
 				var idMouse = mousePos;
 				newID = Number((clients.indexOf(client.id) + 1));
 				idMouse.push(newID)
-				//console.log("USER ID " + newID + " IS MOVING");
+				console.log("USER ID " + newID + " IS MOVING");
 				io.sockets.connected[clients[items]].emit('clientMoved', idMouse);
 			}
 		}
