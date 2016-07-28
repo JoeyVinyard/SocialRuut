@@ -38,11 +38,117 @@
       var localSquareID = "#";
       var localSquareNum = 0;
 
-      var relativePos = [genRandomPos(),genRandomPos()];
+      var localPosition = [genRandomPos(),genRandomPos()];
 
       var heightOffset, widthOffset, yOffset, xOffset;
+
+
+      var pos = [0,0];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      //Creates a new square whenever a user joins
+      server.on('userAdded', function(elems){
+        createSocialSquare(Number(elems));
+        server.emit('clientInfo', clientInfo);
+      });
+
+
+
+
+
+
+
+
+
+
+      server.on('clientInfo', function(info){
+        if((info.id+1) != localSquareNum){
+          console.log(info);
+          squareClients[info.id].xPos = info.xRelPos;
+          squareClients[info.id].yPos = info.yRelPos;
+          $("#" + (info.id+1)).css("top", parseInt($(localSquareID).css("top"),10) - (clientInfo.yRelPos - squareClients[info.id].yPos));
+          $("#" + (info.id+1)).css("left", parseInt($(localSquareID).css("left"),10) - (clientInfo.xRelPos -  squareClients[info.id].xPos));
+          console.log("Setting square #" + info.id + " to position " + info.xRelPos + "," + info.yRelPos);
+        }
+      });
+      server.on('userCreated', function(elems){
+        //Create any squares that are already on the server
+        for(var i = 1; i <= elems; i++){
+          createSocialSquare(Number(i));
+        }
+        //create the players socialSquare
+        localSquareNum = Number(elems) + 1;
+        createSocialSquare(localSquareNum);
+        localSquareID += (localSquareNum);
+        //
+        clientInfo.id = (localSquareNum-1);
+        clientInfo.yRelPos = localPosition[0];
+        clientInfo.xRelPos = localPosition[1];
+        server.emit('clientInfo', clientInfo);
+        console.log(clientInfo);
+        rePositionSquare();
+      });
+
+      $(document).mousemove(function(event){
+        //Calculates the new offsets in each direction
+        yOffset = (event.pageY - 15 - parseInt($(localSquareID).css("top"), 10))/-200;
+        xOffset = (event.pageX - 15 - parseInt($(localSquareID).css("left"), 10))/-200;
+        if(!running){
+          repeat = setInterval(update, 10);
+          console.log("setting interval");
+          running = true;
+        }
+      });
+      //Listens to the server, waiting for a client to move its mouse
+      server.on('clientMoved', function(clientInf){
+        squareClients[(clientInf.id)-1].yPos = clientInf.yRelPos;
+        squareClients[(clientInf.id)-1].xPos = clientInf.xRelPos;
+      });
+       //Listens to the server, waiting for a client to leave
+      server.on('clientLeft', function(id){
+        //Generates the element ID to delete, then deletes it
+        var delID = "#" + (Number(id) + 1);
+        $(delID).remove();
+        console.log("Removing client", delID)
+        //Change local square id if needed
+        if(localSquareNum > (id + 1)){
+          localSquareNum--;
+          localSquareID = "#" + localSquareNum;
+        }
+        //Remove square from array, and shift elements overs
+        squareClients.splice(id, 1);
+        for(var i = id; i < squareClients.length; i++){
+          $("#"+squareClients[i].id).attr ("id", Number(i+1));
+          squareClients[i].id -= 1;
+        }
+      });
+      $(window).resize(function(){
+        rePositionSquare();
+      });
+      function rePositionSquare(){
+        heightOffset = parseInt($(localSquareID).css("height"), 10)/2;
+        widthOffset = parseInt($(localSquareID).css("width"), 10)/2;
+        $(localSquareID).css("top", Math.floor(window.innerHeight/2 - heightOffset));
+        $(localSquareID).css("left", Math.floor(window.innerWidth/2 - widthOffset));
+      }
       function genRandomPos(){
-        return Math.floor(Math.random()*1000);
+        return Math.floor(Math.random()*500);
       }
       function getRandomColor(){
         //Generates a random 6 digit number to be used as a color
@@ -64,117 +170,18 @@
         //Push the newly created square into the array
         squareClients.push(newSquare);
       }
-
-      var pos = [0,0];
-
-      function rePositionSquare(){
-        heightOffset = parseInt($(localSquareID).css("height"), 10)/2;
-        widthOffset = parseInt($(localSquareID).css("width"), 10)/2;
-        relativePos[0] = Math.floor(window.innerHeight/2 - heightOffset);
-        relativePos[1] = Math.floor(window.innerWidth/2 - widthOffset);
-        $(localSquareID).css("top", relativePos[0]);
-        $(localSquareID).css("left", relativePos[1]);
-      }
-
-      $(window).resize(function(){
-        rePositionSquare();
-      })
-
-      //Creates a new square whenever a user joins
-      server.on('userAdded', function(elems){
-        createSocialSquare(Number(elems));
-        server.emit('clientInfo', clientInfo);
-      });
-
-      server.on('clientInfo', function(info){
-        if((info.id+1) != localSquareNum){
-          squareClients[info.id].xPos = info.xRelPos;
-          squareClients[info.id].yPos = info.yRelPos;
-          console.log("#" + (info.id + 1));
-          $("#" + (info.id+1)).css("top", info.yRelPos);
-          $("#" + (info.id+1)).css("left", info.xRelPos);
-        }
-      })
-
-      server.on('userCreated', function(elems){
-        //Create any squares that are already on the server
-        for(var i = 1; i <= elems; i++){
-          createSocialSquare(Number(i));
-        }
-        //create the players socialSquare
-        localSquareNum = Number(elems) + 1;
-        createSocialSquare(localSquareNum);
-        localSquareID += (localSquareNum);
-        clientInfo.id = (localSquareNum-1);
-        clientInfo.yRelPos = relativePos[0];
-        clientInfo.xRelPos = relativePos[1];
-        server.emit('clientInfo', clientInfo);
-        console.log(clientInfo);
-        rePositionSquare();
-      });
-
-
-
-
-      var offsets = [0,0];
-      $(document).mousemove(function(event){
-        //Stores new mouse position in an array
-        yOffset = event.pageY - 15 - parseInt($(localSquareID).css("top"), 10);
-        xOffset = event.pageX - 15 - parseInt($(localSquareID).css("left"), 10);
-        yOffset /=-100;
-        xOffset /=-100;
-        if(!running){
-          repeat = setInterval(update, 10);
-          console.log("setting interval");
-          running = true;
-        }
-      });
-
-      //Listens to the server, waiting for a client to move its mouse
-      server.on('clientMoved', function(clientInf){
-        //console.log(clientInf.id-1);
-        squareClients[(clientInf.id)-1].yPos = clientInf.yRelPos;
-        squareClients[(clientInf.id)-1].xPos = clientInf.xRelPos;
-      });
-
-      //Listens to the server, waiting for a client to leave
-      server.on('clientLeft', function(id){
-        //Generates the element ID to delete, then deletes it
-        var delID = "#" + (Number(id) + 1);
-        $(delID).remove();
-        console.log("Removing client", delID)
-        //Change local square id if needed
-        if(localSquareNum > (id + 1)){
-          localSquareNum--;
-          localSquareID = "#" + localSquareNum;
-        }
-        //Remove square from array, and shift elements overs
-        squareClients.splice(id, 1);
-        for(var i = id; i < squareClients.length; i++){
-          $("#"+squareClients[i].id).attr ("id", Number(i+1));
-          squareClients[i].id -= 1;
-        }
-      });
       var cssIDRel;
-      var curPos = [0,0];
-      var totXOff = 0;
-      var totYOff = 0;
-      //var lastMousePos = mousePos;
-      function update(){
-        //console.log("meep");
-        //console.log(relativePos);
-        clientInfo.yRelPos += yOffset;
-        clientInfo.xRelPos += xOffset;
-        totYOff += yOffset;
-        totXOff += xOffset;
+      function update(){ 
+        clientInfo.xRelPos -= xOffset;
+        clientInfo.yRelPos -= yOffset;
         server.emit('mouseMove', clientInfo);
-        for(var i = 0; i < squareClients.length; i++){
-          if((i + 1) != localSquareNum){
-            cssIDRel = "#" + Number(i + 1);
-            $(cssIDRel).css("top",  squareClients[i].yPos + totYOff);
-            $(cssIDRel).css("left", squareClients[i].xPos + totXOff);
-          }//close if
-        }//close for
+         for(var i = 0; i < squareClients.length; i++){
+           if((i + 1) != localSquareNum){
+             cssIDRel = "#" + Number(i + 1);
+              $(cssIDRel).css("top", parseInt($(localSquareID).css("top"),10) - (clientInfo.yRelPos - squareClients[i].yPos));
+              $(cssIDRel).css("left", parseInt($(localSquareID).css("left"),10) - (clientInfo.xRelPos -  squareClients[i].xPos));
+           }//close if
+         }//close for
       }//close update
     </script>
   </body>
