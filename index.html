@@ -47,12 +47,10 @@
       });
       server.on('clientInfo', function(info){
         if((info.id+1) != localSquareNum){
-          console.log(info);
           squareClients[info.id].xPos = info.xRelPos;
           squareClients[info.id].yPos = info.yRelPos;
           $("#" + (info.id+1)).css("top", parseInt($(localSquareID).css("top"),10) - (clientInfo.yRelPos - squareClients[info.id].yPos));
           $("#" + (info.id+1)).css("left", parseInt($(localSquareID).css("left"),10) - (clientInfo.xRelPos -  squareClients[info.id].xPos));
-          console.log("Setting square #" + info.id + " to position " + info.xRelPos + "," + info.yRelPos);
         }
       });
       server.on('userCreated', function(elems){
@@ -64,12 +62,11 @@
         localSquareNum = Number(elems) + 1;
         createSocialSquare(localSquareNum);
         localSquareID += (localSquareNum);
-        //
+        //Populates clientInfo object
         clientInfo.id = (localSquareNum-1);
         clientInfo.yRelPos = localPosition[0];
         clientInfo.xRelPos = localPosition[1];
         server.emit('clientInfo', clientInfo);
-        console.log(clientInfo);
         rePositionSquare();
       });
 
@@ -79,7 +76,6 @@
         xOffset = (event.pageX - 15 - parseInt($(localSquareID).css("left"), 10))/-200;
         if(!running){
           repeat = setInterval(update, 10);
-          console.log("setting interval");
           running = true;
         }
       });
@@ -93,7 +89,6 @@
         //Generates the element ID to delete, then deletes it
         var delID = "#" + (Number(id) + 1);
         $(delID).remove();
-        console.log("Removing client", delID)
         //Change local square id if needed
         if(localSquareNum > (id + 1)){
           localSquareNum--;
@@ -125,10 +120,8 @@
       }
       function createSocialSquare(id){
         //Creates a new element for the client
-        console.log("CREATING SQUARE WITH ID:",id)
         var appendString = "<div id = " + id + " class = socSquare></div>";
         $("body").append(appendString)
-        //$("#" + id).css("left", id*50);
         //Generates a random color for the square
         var color = getRandomColor();
         $("#" + id).css("background-color", color);
