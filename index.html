@@ -29,10 +29,16 @@
         yPos    : 0
       }
 
+      var clientInfo = {
+        id            : 0,
+        xRelPos   : 0,
+        yRelPos   : 0
+      }
+
       var localSquareID = "#";
       var localSquareNum = 0;
 
-      var relativePos = [0,0];
+      var relativePos = [genRandomPos(),genRandomPos()];
 
       var heightOffset, widthOffset, yOffset, xOffset;
       function genRandomPos(){
@@ -48,7 +54,7 @@
         console.log("CREATING SQUARE WITH ID:",id)
         var appendString = "<div id = " + id + " class = socSquare></div>";
         $("body").append(appendString)
-        $("#" + id).css("left", id*50);
+        //$("#" + id).css("left", id*50);
         //Generates a random color for the square
         var color = getRandomColor();
         $("#" + id).css("background-color", color);
@@ -77,7 +83,18 @@
       //Creates a new square whenever a user joins
       server.on('userAdded', function(elems){
         createSocialSquare(Number(elems));
+        server.emit('clientInfo', clientInfo);
       });
+
+      server.on('clientInfo', function(info){
+        if((info.id+1) != localSquareNum){
+          squareClients[info.id].xPos = info.xRelPos;
+          squareClients[info.id].yPos = info.yRelPos;
+          console.log("#" + (info.id + 1));
+          $("#" + (info.id+1)).css("top", info.yRelPos);
+          $("#" + (info.id+1)).css("left", info.xRelPos);
+        }
+      })
 
       server.on('userCreated', function(elems){
         //Create any squares that are already on the server
@@ -88,17 +105,24 @@
         localSquareNum = Number(elems) + 1;
         createSocialSquare(localSquareNum);
         localSquareID += (localSquareNum);
-
+        clientInfo.id = (localSquareNum-1);
+        clientInfo.yRelPos = relativePos[0];
+        clientInfo.xRelPos = relativePos[1];
+        server.emit('clientInfo', clientInfo);
+        console.log(clientInfo);
         rePositionSquare();
       });
+
+
+
+
       var offsets = [0,0];
       $(document).mousemove(function(event){
         //Stores new mouse position in an array
         yOffset = event.pageY - 15 - parseInt($(localSquareID).css("top"), 10);
         xOffset = event.pageX - 15 - parseInt($(localSquareID).css("left"), 10);
-        offsets[0] = yOffset/-100;
-        offsets[1] = xOffset/-100;
-        server.emit('mouseMove', offsets);
+        yOffset /=-100;
+        xOffset /=-100;
         if(!running){
           repeat = setInterval(update, 10);
           console.log("setting interval");
@@ -107,9 +131,10 @@
       });
 
       //Listens to the server, waiting for a client to move its mouse
-      server.on('clientMoved', function(clientInfo){
-        squareClients[(clientInfo[2])-1].yOff = clientInfo[0];
-        squareClients[(clientInfo[2])-1].xOff = clientInfo[1];
+      server.on('clientMoved', function(clientInf){
+        //console.log(clientInf.id-1);
+        squareClients[(clientInf.id)-1].yPos = clientInf.yRelPos;
+        squareClients[(clientInf.id)-1].xPos = clientInf.xRelPos;
       });
 
       //Listens to the server, waiting for a client to leave
@@ -132,25 +157,25 @@
       });
       var cssIDRel;
       var curPos = [0,0];
+      var totXOff = 0;
+      var totYOff = 0;
       //var lastMousePos = mousePos;
       function update(){
         //console.log("meep");
+        //console.log(relativePos);
+        clientInfo.yRelPos += yOffset;
+        clientInfo.xRelPos += xOffset;
+        totYOff += yOffset;
+        totXOff += xOffset;
+        server.emit('mouseMove', clientInfo);
         for(var i = 0; i < squareClients.length; i++){
           if((i + 1) != localSquareNum){
             cssIDRel = "#" + Number(i + 1);
-            curPos[0] = parseInt($(cssIDRel).css("top"), 10);
-            curPos[1] = parseInt($(cssIDRel).css("left"), 10);
-           // console.log(squareClients[i].yOff + " " + squareClients[i].xOff);
-            squareClients[i].yPos = parseInt($(cssIDRel).css("top"), 10) - squareClients[i].yOff;
-            squareClients[i].xPos = parseInt($(cssIDRel).css("left"), 10) - squareClients[i].xOff;
-            relativePos[0] += yOffset;
-            relativePos[1] += xOffset;
-            console.log(squareClients[i].yPos + " " + yOffset/-100 + " " + squareClients[i].xOff + " " + squareClients[i].xPos + " " + xOffset/-100);
-            $(cssIDRel).css("top",  squareClients[i].yPos + (yOffset/-100));
-            $(cssIDRel).css("left", squareClients[i].xPos + (xOffset/-100));
-          }
-        }
-      }
+            $(cssIDRel).css("top",  squareClients[i].yPos + totYOff);
+            $(cssIDRel).css("left", squareClients[i].xPos + totXOff);
+          }//close if
+        }//close for
+      }//close update
     </script>
   </body>
 </html>
