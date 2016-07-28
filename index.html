@@ -41,42 +41,11 @@
       var localPosition = [genRandomPos(),genRandomPos()];
 
       var heightOffset, widthOffset, yOffset, xOffset;
-
-
-      var pos = [0,0];
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
       //Creates a new square whenever a user joins
       server.on('userAdded', function(elems){
         createSocialSquare(Number(elems));
         server.emit('clientInfo', clientInfo);
       });
-
-
-
-
-
-
-
-
-
-
       server.on('clientInfo', function(info){
         if((info.id+1) != localSquareNum){
           console.log(info);
