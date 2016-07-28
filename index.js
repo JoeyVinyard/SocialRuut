@@ -35,7 +35,7 @@ io.on('connection', function(client){
 			if(clients[items] != client.id){
 				var idMouse = mousePos;
 				newID = Number((clients.indexOf(client.id) + 1));
-				idMouse.push(newID)
+				idMouse.id = newID
 				console.log("USER ID " + newID + " IS MOVING");
 				io.sockets.connected[clients[items]].emit('clientMoved', idMouse);
 			}

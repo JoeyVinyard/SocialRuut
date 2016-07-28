@@ -29,56 +29,64 @@
         yPos    : 0
       }
 
+      var clientInfo = {
+        id            : 0,
+        xRelPos   : 0,
+        yRelPos   : 0
+      }
+
       var localSquareID = "#";
       var localSquareNum = 0;
 
-      var relativePos = [0,0];
+      var localPosition = [genRandomPos(),genRandomPos()];
 
       var heightOffset, widthOffset, yOffset, xOffset;
-      function genRandomPos(){
-        return Math.floor(Math.random()*1000);
-      }
-      function getRandomColor(){
-        //Generates a random 6 digit number to be used as a color
-        var num = Math.floor(Math.random() * (999999-111111)) + 111111;
-        return "#" + num;
-      }
-      function createSocialSquare(id){
-        //Creates a new element for the client
-        console.log("CREATING SQUARE WITH ID:",id)
-        var appendString = "<div id = " + id + " class = socSquare></div>";
-        $("body").append(appendString)
-        $("#" + id).css("left", id*50);
-        //Generates a random color for the square
-        var color = getRandomColor();
-        $("#" + id).css("background-color", color);
-        //Create the social square object to store
-        newSquare = Object.create(socialSquare);
-        newSquare.id = id;
-        //Push the newly created square into the array
-        squareClients.push(newSquare);
-      }
+
 
       var pos = [0,0];
 
-      function rePositionSquare(){
-        heightOffset = parseInt($(localSquareID).css("height"), 10)/2;
-        widthOffset = parseInt($(localSquareID).css("width"), 10)/2;
-        relativePos[0] = Math.floor(window.innerHeight/2 - heightOffset);
-        relativePos[1] = Math.floor(window.innerWidth/2 - widthOffset);
-        $(localSquareID).css("top", relativePos[0]);
-        $(localSquareID).css("left", relativePos[1]);
-      }
 
-      $(window).resize(function(){
-        rePositionSquare();
-      })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
       //Creates a new square whenever a user joins
       server.on('userAdded', function(elems){
         createSocialSquare(Number(elems));
+        server.emit('clientInfo', clientInfo);
       });
 
+
+
+
+
+
+
+
+
+
+      server.on('clientInfo', function(info){
+        if((info.id+1) != localSquareNum){
+          console.log(info);
+          squareClients[info.id].xPos = info.xRelPos;
+          squareClients[info.id].yPos = info.yRelPos;
+          $("#" + (info.id+1)).css("top", parseInt($(localSquareID).css("top"),10) - (clientInfo.yRelPos - squareClients[info.id].yPos));
+          $("#" + (info.id+1)).css("left", parseInt($(localSquareID).css("left"),10) - (clientInfo.xRelPos -  squareClients[info.id].xPos));
+          console.log("Setting square #" + info.id + " to position " + info.xRelPos + "," + info.yRelPos);
+        }
+      });
       server.on('userCreated', function(elems){
         //Create any squares that are already on the server
         for(var i = 1; i <= elems; i++){
@@ -88,31 +96,31 @@
         localSquareNum = Number(elems) + 1;
         createSocialSquare(localSquareNum);
         localSquareID += (localSquareNum);
-
+        //
+        clientInfo.id = (localSquareNum-1);
+        clientInfo.yRelPos = localPosition[0];
+        clientInfo.xRelPos = localPosition[1];
+        server.emit('clientInfo', clientInfo);
+        console.log(clientInfo);
         rePositionSquare();
       });
-      var offsets = [0,0];
+
       $(document).mousemove(function(event){
-        //Stores new mouse position in an array
-        yOffset = event.pageY - 15 - parseInt($(localSquareID).css("top"), 10);
-        xOffset = event.pageX - 15 - parseInt($(localSquareID).css("left"), 10);
-        offsets[0] = yOffset/-100;
-        offsets[1] = xOffset/-100;
-        server.emit('mouseMove', offsets);
+        //Calculates the new offsets in each direction
+        yOffset = (event.pageY - 15 - parseInt($(localSquareID).css("top"), 10))/-200;
+        xOffset = (event.pageX - 15 - parseInt($(localSquareID).css("left"), 10))/-200;
         if(!running){
           repeat = setInterval(update, 10);
           console.log("setting interval");
           running = true;
         }
       });
-
       //Listens to the server, waiting for a client to move its mouse
-      server.on('clientMoved', function(clientInfo){
-        squareClients[(clientInfo[2])-1].yOff = clientInfo[0];
-        squareClients[(clientInfo[2])-1].xOff = clientInfo[1];
+      server.on('clientMoved', function(clientInf){
+        squareClients[(clientInf.id)-1].yPos = clientInf.yRelPos;
+        squareClients[(clientInf.id)-1].xPos = clientInf.xRelPos;
       });
-
-      //Listens to the server, waiting for a client to leave
+       //Listens to the server, waiting for a client to leave
       server.on('clientLeft', function(id){
         //Generates the element ID to delete, then deletes it
         var delID = "#" + (Number(id) + 1);
@@ -130,27 +138,51 @@
           squareClients[i].id -= 1;
         }
       });
-      var cssIDRel;
-      var curPos = [0,0];
-      //var lastMousePos = mousePos;
-      function update(){
-        //console.log("meep");
-        for(var i = 0; i < squareClients.length; i++){
-          if((i + 1) != localSquareNum){
-            cssIDRel = "#" + Number(i + 1);
-            curPos[0] = parseInt($(cssIDRel).css("top"), 10);
-            curPos[1] = parseInt($(cssIDRel).css("left"), 10);
-           // console.log(squareClients[i].yOff + " " + squareClients[i].xOff);
-            squareClients[i].yPos = parseInt($(cssIDRel).css("top"), 10) - squareClients[i].yOff;
-            squareClients[i].xPos = parseInt($(cssIDRel).css("left"), 10) - squareClients[i].xOff;
-            relativePos[0] += yOffset;
-            relativePos[1] += xOffset;
-            console.log(squareClients[i].yPos + " " + yOffset/-100 + " " + squareClients[i].xOff + " " + squareClients[i].xPos + " " + xOffset/-100);
-            $(cssIDRel).css("top",  squareClients[i].yPos + (yOffset/-100));
-            $(cssIDRel).css("left", squareClients[i].xPos + (xOffset/-100));
-          }
-        }
+      $(window).resize(function(){
+        rePositionSquare();
+      });
+      function rePositionSquare(){
+        heightOffset = parseInt($(localSquareID).css("height"), 10)/2;
+        widthOffset = parseInt($(localSquareID).css("width"), 10)/2;
+        $(localSquareID).css("top", Math.floor(window.innerHeight/2 - heightOffset));
+        $(localSquareID).css("left", Math.floor(window.innerWidth/2 - widthOffset));
       }
+      function genRandomPos(){
+        return Math.floor(Math.random()*500);
+      }
+      function getRandomColor(){
+        //Generates a random 6 digit number to be used as a color
+        var num = Math.floor(Math.random() * (999999-111111)) + 111111;
+        return "#" + num;
+      }
+      function createSocialSquare(id){
+        //Creates a new element for the client
+        console.log("CREATING SQUARE WITH ID:",id)
+        var appendString = "<div id = " + id + " class = socSquare></div>";
+        $("body").append(appendString)
+        //$("#" + id).css("left", id*50);
+        //Generates a random color for the square
+        var color = getRandomColor();
+        $("#" + id).css("background-color", color);
+        //Create the social square object to store
+        newSquare = Object.create(socialSquare);
+        newSquare.id = id;
+        //Push the newly created square into the array
+        squareClients.push(newSquare);
+      }
+      var cssIDRel;
+      function update(){ 
+        clientInfo.xRelPos -= xOffset;
+        clientInfo.yRelPos -= yOffset;
+        server.emit('mouseMove', clientInfo);
+         for(var i = 0; i < squareClients.length; i++){
+           if((i + 1) != localSquareNum){
+             cssIDRel = "#" + Number(i + 1);
+              $(cssIDRel).css("top", parseInt($(localSquareID).css("top"),10) - (clientInfo.yRelPos - squareClients[i].yPos));
+              $(cssIDRel).css("left", parseInt($(localSquareID).css("left"),10) - (clientInfo.xRelPos -  squareClients[i].xPos));
+           }//close if
+         }//close for
+      }//close update
     </script>
   </body>
 </html>
