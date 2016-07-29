@@ -9,6 +9,12 @@ app.get('/', function(req, res){
 
 });
 
+var bite = {
+	xPos		: 0,
+	yPos		: 0,
+	bColor		: 0
+}
+var bites = [];
 var clients = [];//Initialize a new array to hold all the clients
 
 //Fire whenever a new client connects
@@ -23,6 +29,14 @@ io.on('connection', function(client){
 		if(clients[items] != client.id){
 			io.sockets.connected[clients[Number(items)]].emit('userAdded', clients.length);
 		}
+	}
+	var newBite;
+	for(var i = 0; i < 9; i++){
+		newBite = Object.create(bite);
+		newBite.yPos = genPos();
+		newBite.xPos = genPos();
+		newBite.bColor = genColor();
+		bites.push(newBite);
 	}
 	client.on('clientInfo', function(pos){
 		io.emit('clientInfo', pos);
@@ -57,6 +71,20 @@ io.on('connection', function(client){
 		}
 	})
 });
+
+function genPos(){
+	if(Math.floor(Math.random()*2) == 1){
+		return Math.floor(Math.random()*1000);		
+	}
+	else{
+		return Math.floor(Math.random()*-1000);	
+	}
+}
+function genColor(){
+	//Generates a random 6 digit number to be used as a color
+	var num = Math.floor(Math.random() * (999999-111111)) + 111111;
+	return "#" + num;
+}
 
 //Opens the port 3001, as weell as the server port
 http.listen(process.env.PORT || 3001, function(){
