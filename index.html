@@ -111,7 +111,12 @@
         $(localSquareID).css("left", Math.floor(window.innerWidth/2 - widthOffset));
       }
       function genRandomPos(){
-        return Math.floor(Math.random()*500);
+        if(Math.floor(Math.random()*2) == 1){
+          return Math.floor(Math.random()*1000);    
+        }
+        else{
+          return Math.floor(Math.random()*-1000); 
+        }
       }
       function getRandomColor(){
         //Generates a random 6 digit number to be used as a color
