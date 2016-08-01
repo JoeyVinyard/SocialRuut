@@ -2,13 +2,14 @@
 <html>
   <head>
     <title>Social Squares</title>
+    <link rel="shortcut icon" href="icon.ico" />
   </head>
   <body>
     <style>
       .socSquare{
-      width:30px;
-      height:30px;
-      position:absolute;
+        width:30px;
+        height:30px;
+        position:absolute;
       }
     </style>
     <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
@@ -18,7 +19,7 @@
       var repeat;
 
       var squareClients = []; //Array to hold all the clients
-      var server = io(); //Server io
+      var server = io.connect("http://socialruut.com:81"); //Server io
 
       var socialSquare = {//Base object for the squares
         id        : 0,
@@ -34,6 +35,7 @@
         yRelPos   : 0
       }
 
+      var localBites = [];
       var localSquareID = "#";
       var localSquareNum = 0;
 
@@ -144,6 +146,7 @@
            }//close if
          }//close for
       }//close update
+
     </script>
   </body>
 </html>

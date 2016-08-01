@@ -6,20 +6,18 @@ var io = require('socket.io')(http);
 //Include the index.html file
 app.get('/', function(req, res){
   res.sendFile(__dirname + '/index.html');
-
 });
 
 var bite = {
 	xPos		: 0,
 	yPos		: 0,
-	bColor		: 0
+	bColor	: 0
 }
-var bites = [];
+var bites = [];//Array of bites
 var clients = [];//Initialize a new array to hold all the clients
 
 //Fire whenever a new client connects
 io.on('connection', function(client){
-	
 	//Transmit to the new client that it was created
 	client.emit('userCreated', clients.length);
 	//Add the new client to the end of the client list
@@ -28,16 +26,10 @@ io.on('connection', function(client){
 	for(items in clients){
 		if(clients[items] != client.id){
 			io.sockets.connected[clients[Number(items)]].emit('userAdded', clients.length);
-		}
-	}
+		}//close if
+	}//close for
 	var newBite;
-	for(var i = 0; i < 9; i++){
-		newBite = Object.create(bite);
-		newBite.yPos = genPos();
-		newBite.xPos = genPos();
-		newBite.bColor = genColor();
-		bites.push(newBite);
-	}
+	var newBites = [];
 	client.on('clientInfo', function(pos){
 		io.emit('clientInfo', pos);
 	});
@@ -50,19 +42,16 @@ io.on('connection', function(client){
 				var idMouse = mousePos;
 				newID = Number((clients.indexOf(client.id) + 1));
 				idMouse.id = newID
-				console.log("USER ID " + newID + " IS MOVING");
 				io.sockets.connected[clients[items]].emit('clientMoved', idMouse);
 			}
 		}
 	});
-
 	//Fires when a client disconnects
 	client.on('disconnect', function(){
 		var id = client.id;
 		var indexOfLeave = clients.indexOf(id);
 		//Removes the disconnected client from the list
 		clients.splice(indexOfLeave, 1)
-		console.log('USER IN INDEX', indexOfLeave, "HAS LEFT");
 		for(items in clients){
 			if(clients[items] != client.id){
 				//Tells each of the remaining clients that somebody left
@@ -71,7 +60,6 @@ io.on('connection', function(client){
 		}
 	})
 });
-
 function genPos(){
 	if(Math.floor(Math.random()*2) == 1){
 		return Math.floor(Math.random()*1000);		
@@ -85,8 +73,7 @@ function genColor(){
 	var num = Math.floor(Math.random() * (999999-111111)) + 111111;
 	return "#" + num;
 }
-
 //Opens the port 3001, as weell as the server port
-http.listen(process.env.PORT || 3001, function(){
-  console.log('listening on *:3001');
+http.listen(process.env.PORT || 81, function(){
+  console.log('listening on *:81');
 });
